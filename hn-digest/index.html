@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HN日報 — ハッカーニュース日本語まとめ</title>
+    <meta
+      name="description"
+      content="Hacker News の注目記事を日本語で要約した日次ダイジェスト。"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+JP:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./css/style.css" />
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="hero">
+        <div class="hero-visual" aria-hidden="true"></div>
+        <p class="hero-kicker" id="date-label">Hacker News Digest</p>
+        <h1 class="brand">HN<span>日報</span></h1>
+        <p class="hero-lead" id="tagline">
+          今日のハッカーニュースを、日本語でひとつかみ。
+        </p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#digest">まとめを読む</a>
+          <button class="btn btn-ghost" type="button" id="refresh-scores">
+            スコアを更新
+          </button>
+          <a
+            class="btn btn-ghost"
+            href="https://news.ycombinator.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            >原文 HN</a
+          >
+        </div>
+        <p class="status" id="status" aria-live="polite"></p>
+      </header>
+
+      <section class="section" id="digest" aria-labelledby="digest-heading">
+        <div class="section-head">
+          <h2 id="digest-heading">今日のまとめ</h2>
+          <p class="meta" id="story-count"></p>
+        </div>
+        <ol class="story-list" id="story-list"></ol>
+      </section>
+
+      <footer class="footer">
+        <p>
+          データは
+          <a href="https://github.com/HackerNews/API" target="_blank" rel="noopener noreferrer"
+            >Hacker News API</a
+          >
+          を参照。日本語要約は編集によるダイジェストです。
+        </p>
+      </footer>
+    </main>
+    <script src="./js/app.js" type="module"></script>
+  </body>
+</html>
