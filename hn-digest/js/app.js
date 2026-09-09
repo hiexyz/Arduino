@@ -79,9 +79,35 @@ function renderDigest(digest) {
 }
 
 async function fetchLiveScore(id) {
-  const res = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`);
-  if (!res.ok) throw new Error(`HN item ${id}`);
-  return res.json();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+  try {
+    const res = await fetch(
+      `https://hacker-news.firebaseio.com/v0/item/${id}.json`,
+      { signal: controller.signal }
+    );
+    if (!res.ok) throw new Error(`HN item ${id}`);
+    return res.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function mapPool(items, limit, worker) {
+  const results = new Array(items.length);
+  let next = 0;
+
+  async function run() {
+    while (next < items.length) {
+      const i = next++;
+      results[i] = await worker(items[i], i);
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, () => run())
+  );
+  return results;
 }
 
 async function refreshScores(stories) {
@@ -89,16 +115,25 @@ async function refreshScores(stories) {
   refreshBtn.disabled = true;
 
   try {
-    const updates = await Promise.all(
-      stories.map(async (story) => {
+    const updates = await mapPool(stories, 4, async (story) => {
+      try {
         const live = await fetchLiveScore(story.id);
         return {
           id: story.id,
           score: live?.score ?? story.score,
           comments: live?.descendants ?? story.comments,
+          ok: true,
         };
-      })
-    );
+      } catch (err) {
+        console.warn("score fetch failed", story.id, err);
+        return {
+          id: story.id,
+          score: story.score,
+          comments: story.comments,
+          ok: false,
+        };
+      }
+    });
 
     const byId = new Map(updates.map((u) => [u.id, u]));
     for (const li of listEl.querySelectorAll(".story")) {
@@ -114,7 +149,12 @@ async function refreshScores(stories) {
       }
     }
 
-    statusEl.textContent = `スコア更新完了（${new Date().toLocaleTimeString("ja-JP")}）`;
+    const failed = updates.filter((u) => !u.ok).length;
+    const time = new Date().toLocaleTimeString("ja-JP");
+    statusEl.textContent =
+      failed === 0
+        ? `スコア更新完了（${time}）`
+        : `スコア更新完了（${time}・${failed}件は取得失敗）`;
   } catch (err) {
     console.error(err);
     statusEl.textContent = "スコア更新に失敗しました。ネットワークを確認してください。";
